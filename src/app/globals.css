@@ -59,31 +59,3 @@
     @apply bg-background text-foreground;
   }
 }
-
-@layer components {
-  .solar-term-day {
-    position: relative;
-    font-weight: 600 !important;
-    color: hsl(142 71% 35%) !important;
-  }
-
-  .solar-term-day::after {
-    content: "";
-    position: absolute;
-    bottom: 2px;
-    left: 50%;
-    transform: translateX(-50%);
-    width: 4px;
-    height: 4px;
-    border-radius: 50%;
-    background-color: hsl(142 71% 35%);
-  }
-
-  .dark .solar-term-day {
-    color: hsl(142 71% 50%) !important;
-  }
-
-  .dark .solar-term-day::after {
-    background-color: hsl(142 71% 50%);
-  }
-}

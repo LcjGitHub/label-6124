@@ -8,6 +8,13 @@ import { buttonVariants } from "@/components/ui/button";
 
 export type CalendarProps = React.ComponentProps<typeof DayPicker>;
 
+const SOLAR_TERM_DAY_CLASS =
+  "relative font-semibold " +
+  "after:absolute after:bottom-0.5 after:left-1/2 after:-translate-x-1/2 " +
+  "after:w-1 after:h-1 after:rounded-full " +
+  "after:bg-green-600 dark:after:bg-green-400 " +
+  "aria-selected:after:bg-primary-foreground";
+
 /**
  * shadcn Calendar 组件（基于 react-day-picker）
  */
@@ -15,6 +22,8 @@ function Calendar({
   className,
   classNames,
   showOutsideDays = true,
+  modifiers,
+  modifiersClassNames,
   ...props
 }: CalendarProps) {
   return (
@@ -54,6 +63,11 @@ function Calendar({
           "aria-selected:bg-accent aria-selected:text-accent-foreground",
         day_hidden: "invisible",
         ...classNames,
+      }}
+      modifiers={modifiers}
+      modifiersClassNames={{
+        solarTerm: SOLAR_TERM_DAY_CLASS,
+        ...modifiersClassNames,
       }}
       components={{
         IconLeft: () => <ChevronLeft className="h-4 w-4" />,

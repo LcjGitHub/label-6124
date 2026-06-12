@@ -167,15 +167,10 @@ export function DatePickerPanel() {
     setMonth(new Date(selectedDate.getFullYear(), selectedDate.getMonth(), 1));
   }, [selectedDate]);
 
-  const solarTermDates = useMemo(() => {
-    const year = month.getFullYear();
-    const monthIndex = month.getMonth() + 1;
-    const terms = getSolarTermsForMonth(year, monthIndex);
-    return terms.map((term) => {
-      const [y, m, d] = term.date.split("-").map(Number);
-      return new Date(y, m - 1, d);
-    });
-  }, [month]);
+  const solarTermDates = useMemo(
+    () => getSolarTermsForMonth(month.getFullYear(), month.getMonth() + 1),
+    [month],
+  );
 
   return (
     <Card>
@@ -198,9 +193,6 @@ export function DatePickerPanel() {
             fromDate={new Date(CALENDAR_YEAR_MIN, 0, 1)}
             toDate={new Date(CALENDAR_YEAR_MAX, 11, 31)}
             modifiers={{ solarTerm: solarTermDates }}
-            modifiersClassNames={{
-              solarTerm: "solar-term-day",
-            }}
           />
         </div>
       </CardContent>
