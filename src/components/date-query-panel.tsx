@@ -1,5 +1,6 @@
 "use client";
 
+import { useState, KeyboardEvent } from "react";
 import { Calendar } from "@/components/ui/calendar";
 import {
   Card,
@@ -15,12 +16,113 @@ import { useFavoritesStore } from "@/store/favorites-store";
 import {
   CALENDAR_YEAR_MAX,
   CALENDAR_YEAR_MIN,
+  DateValidationResult,
   formatDateKey,
   formatSolarDate,
   getDayEntry,
 } from "@/lib/calendar";
 import { zhCN } from "date-fns/locale";
-import { Star, StarOff } from "lucide-react";
+import { Star, StarOff, ArrowRight } from "lucide-react";
+import { cn } from "@/lib/utils";
+
+function DateInputForm() {
+  const { setSelectedDateFromString } = useDateStore();
+  const [yearInput, setYearInput] = useState("");
+  const [monthInput, setMonthInput] = useState("");
+  const [dayInput, setDayInput] = useState("");
+  const [validation, setValidation] = useState<DateValidationResult | null>(
+    null,
+  );
+
+  const handleJump = () => {
+    const y = yearInput.trim();
+    const m = monthInput.trim();
+    const d = dayInput.trim();
+
+    if (!y || !m || !d) {
+      setValidation({ valid: false, error: "请填写完整的年、月、日" });
+      return;
+    }
+
+    const input = `${y}-${m}-${d}`;
+    const result = setSelectedDateFromString(input);
+    setValidation(result);
+
+    if (result.valid) {
+      setYearInput("");
+      setMonthInput("");
+      setDayInput("");
+    }
+  };
+
+  const handleKeyDown = (e: KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === "Enter") {
+      handleJump();
+    }
+  };
+
+  const inputBaseClass =
+    "h-10 rounded-md border border-input bg-background px-3 text-sm " +
+    "ring-offset-background placeholder:text-muted-foreground " +
+    "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring " +
+    "focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50";
+
+  return (
+    <div className="space-y-3">
+      <div className="flex items-end gap-2">
+        <div className="flex-1 space-y-1.5">
+          <label className="text-xs font-medium text-muted-foreground">年</label>
+          <input
+            type="text"
+            inputMode="numeric"
+            placeholder="2024"
+            maxLength={4}
+            value={yearInput}
+            onChange={(e) => setYearInput(e.target.value.replace(/\D/g, ""))}
+            onKeyDown={handleKeyDown}
+            className={cn(inputBaseClass, "w-full")}
+          />
+        </div>
+        <div className="w-14 space-y-1.5">
+          <label className="text-xs font-medium text-muted-foreground">月</label>
+          <input
+            type="text"
+            inputMode="numeric"
+            placeholder="06"
+            maxLength={2}
+            value={monthInput}
+            onChange={(e) => setMonthInput(e.target.value.replace(/\D/g, ""))}
+            onKeyDown={handleKeyDown}
+            className={cn(inputBaseClass, "w-full")}
+          />
+        </div>
+        <div className="w-14 space-y-1.5">
+          <label className="text-xs font-medium text-muted-foreground">日</label>
+          <input
+            type="text"
+            inputMode="numeric"
+            placeholder="15"
+            maxLength={2}
+            value={dayInput}
+            onChange={(e) => setDayInput(e.target.value.replace(/\D/g, ""))}
+            onKeyDown={handleKeyDown}
+            className={cn(inputBaseClass, "w-full")}
+          />
+        </div>
+        <Button onClick={handleJump} size="sm" className="shrink-0 gap-1">
+          <ArrowRight className="h-4 w-4" />
+          跳转
+        </Button>
+      </div>
+      {validation && !validation.valid && validation.error && (
+        <p className="text-xs font-medium text-destructive">{validation.error}</p>
+      )}
+      {validation && validation.valid && (
+        <p className="text-xs font-medium text-primary">跳转成功</p>
+      )}
+    </div>
+  );
+}
 
 /**
  * 公历日期选择器
@@ -36,16 +138,19 @@ export function DatePickerPanel() {
           数据范围 {CALENDAR_YEAR_MIN}–{CALENDAR_YEAR_MAX} 年
         </CardDescription>
       </CardHeader>
-      <CardContent className="flex justify-center">
-        <Calendar
-          mode="single"
-          selected={selectedDate}
-          onSelect={(date) => date && setSelectedDate(date)}
-          locale={zhCN}
-          fromDate={new Date(CALENDAR_YEAR_MIN, 0, 1)}
-          toDate={new Date(CALENDAR_YEAR_MAX, 11, 31)}
-          defaultMonth={selectedDate}
-        />
+      <CardContent className="space-y-6">
+        <DateInputForm />
+        <div className="flex justify-center border-t pt-6">
+          <Calendar
+            mode="single"
+            selected={selectedDate}
+            onSelect={(date) => date && setSelectedDate(date)}
+            locale={zhCN}
+            fromDate={new Date(CALENDAR_YEAR_MIN, 0, 1)}
+            toDate={new Date(CALENDAR_YEAR_MAX, 11, 31)}
+            defaultMonth={selectedDate}
+          />
+        </div>
       </CardContent>
     </Card>
   );

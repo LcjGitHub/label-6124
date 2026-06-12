@@ -250,3 +250,79 @@ export function reverseLookupLunar(
 
   return results;
 }
+
+export interface DateValidationResult {
+  valid: boolean;
+  date?: Date;
+  error?: string;
+}
+
+export function parseDateInput(input: string): DateValidationResult {
+  const trimmed = input.trim();
+  if (!trimmed) {
+    return { valid: false, error: "请输入日期" };
+  }
+
+  let year: number | null = null;
+  let month: number | null = null;
+  let day: number | null = null;
+
+  const dashMatch = trimmed.match(/^(\d{4})[\-/.](\d{1,2})[\-/.](\d{1,2})$/);
+  const chineseMatch = trimmed.match(/^(\d{4})年(\d{1,2})月(\d{1,2})日?$/);
+  const plainMatch = trimmed.match(/^(\d{4})(\d{2})(\d{2})$/);
+
+  if (dashMatch) {
+    year = parseInt(dashMatch[1], 10);
+    month = parseInt(dashMatch[2], 10);
+    day = parseInt(dashMatch[3], 10);
+  } else if (chineseMatch) {
+    year = parseInt(chineseMatch[1], 10);
+    month = parseInt(chineseMatch[2], 10);
+    day = parseInt(chineseMatch[3], 10);
+  } else if (plainMatch) {
+    year = parseInt(plainMatch[1], 10);
+    month = parseInt(plainMatch[2], 10);
+    day = parseInt(plainMatch[3], 10);
+  }
+
+  if (year === null || month === null || day === null) {
+    return {
+      valid: false,
+      error: "格式错误，请使用 YYYY-MM-DD、YYYY/MM/DD 或 YYYY年MM月DD日",
+    };
+  }
+
+  return validateGregorianDate(year, month, day);
+}
+
+export function validateGregorianDate(
+  year: number,
+  month: number,
+  day: number,
+): DateValidationResult {
+  if (year < CALENDAR_YEAR_MIN || year > CALENDAR_YEAR_MAX) {
+    return {
+      valid: false,
+      error: `年份超出范围，仅限 ${CALENDAR_YEAR_MIN}–${CALENDAR_YEAR_MAX} 年`,
+    };
+  }
+
+  if (month < 1 || month > 12) {
+    return { valid: false, error: "月份错误，应为 1–12" };
+  }
+
+  if (day < 1 || day > 31) {
+    return { valid: false, error: "日期错误，应为 1–31" };
+  }
+
+  const date = new Date(year, month - 1, day);
+  if (
+    date.getFullYear() !== year ||
+    date.getMonth() !== month - 1 ||
+    date.getDate() !== day
+  ) {
+    return { valid: false, error: "日期无效，该月没有这一天" };
+  }
+
+  return { valid: true, date };
+}
