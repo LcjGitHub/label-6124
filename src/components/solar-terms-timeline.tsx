@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo } from "react";
+import { useRouter } from "next/navigation";
 import {
   Card,
   CardContent,
@@ -23,7 +24,9 @@ import { formatDateKey } from "@/lib/calendar";
  * 当年节气时间轴列表
  */
 export function SolarTermsTimeline() {
+  const router = useRouter();
   const selectedDate = useDateStore((s) => s.selectedDate);
+  const setSelectedDate = useDateStore((s) => s.setSelectedDate);
   const year = selectedDate.getFullYear();
   const todayKey = formatDateKey(new Date());
   const selectedKey = formatDateKey(selectedDate);
@@ -32,12 +35,19 @@ export function SolarTermsTimeline() {
 
   const inRange = year >= CALENDAR_YEAR_MIN && year <= CALENDAR_YEAR_MAX;
 
+  const handleTermClick = (dateStr: string) => {
+    const [y, m, d] = dateStr.split("-").map(Number);
+    const date = new Date(y, m - 1, d);
+    setSelectedDate(date);
+    router.push("/");
+  };
+
   return (
     <Card>
       <CardHeader>
         <CardTitle className="text-lg">{year} 年节气时间轴</CardTitle>
         <CardDescription>
-          共 24 个节气 · Mock 数据
+          共 24 个节气 · Mock 数据 · 点击节气条目可跳转至当日详情
           {!inRange && ` · 超出范围（${CALENDAR_YEAR_MIN}–${CALENDAR_YEAR_MAX}）`}
         </CardDescription>
       </CardHeader>
@@ -66,10 +76,11 @@ export function SolarTermsTimeline() {
                     )}
                   />
                   <div
+                    onClick={() => handleTermClick(term.date)}
                     className={cn(
-                      "rounded-lg border p-3 sm:p-4 transition-colors",
-                      isSelected && "border-primary bg-primary/5",
-                      isToday && !isSelected && "border-orange-200 bg-orange-50 dark:border-orange-900 dark:bg-orange-950/30"
+                      "rounded-lg border p-3 sm:p-4 transition-colors cursor-pointer hover:bg-accent/50 hover:border-accent",
+                      isSelected && "border-primary bg-primary/5 hover:bg-primary/10",
+                      isToday && !isSelected && "border-orange-200 bg-orange-50 dark:border-orange-900 dark:bg-orange-950/30 hover:bg-orange-100 dark:hover:bg-orange-950/50"
                     )}
                   >
                     <div className="flex flex-wrap items-center gap-2">
