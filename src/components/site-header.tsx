@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { CalendarDays, Sun, PartyPopper, Search } from "lucide-react";
+import { CalendarDays, Sun, PartyPopper, Search, Star } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const NAV_ITEMS = [
@@ -10,6 +10,7 @@ const NAV_ITEMS = [
   { href: "/lunar-reverse", label: "农历反查", icon: Search },
   { href: "/solar-terms", label: "节气时间轴", icon: Sun },
   { href: "/festivals", label: "节日一览", icon: PartyPopper },
+  { href: "/favorites", label: "我的收藏", icon: Star },
 ];
 
 /**

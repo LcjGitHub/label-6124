@@ -9,14 +9,18 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { useDateStore } from "@/store/date-store";
+import { useFavoritesStore } from "@/store/favorites-store";
 import {
   CALENDAR_YEAR_MAX,
   CALENDAR_YEAR_MIN,
+  formatDateKey,
   formatSolarDate,
   getDayEntry,
 } from "@/lib/calendar";
 import { zhCN } from "date-fns/locale";
+import { Star, StarOff } from "lucide-react";
 
 /**
  * 公历日期选择器
@@ -53,6 +57,9 @@ export function DatePickerPanel() {
 export function DayInfoPanel() {
   const selectedDate = useDateStore((s) => s.selectedDate);
   const entry = getDayEntry(selectedDate);
+  const { isFavorite, toggleFavorite } = useFavoritesStore();
+  const dateKey = formatDateKey(selectedDate);
+  const favorited = entry ? isFavorite(dateKey) : false;
 
   if (!entry) {
     return (
@@ -72,11 +79,39 @@ export function DayInfoPanel() {
 
   const solarTermDisplay = entry.solarTerm ?? "无";
 
+  const handleToggleFavorite = () => {
+    if (entry) {
+      toggleFavorite(selectedDate, entry);
+    }
+  };
+
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="text-lg">日期信息</CardTitle>
-        <CardDescription>{formatSolarDate(selectedDate)}</CardDescription>
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <div>
+            <CardTitle className="text-lg">日期信息</CardTitle>
+            <CardDescription>{formatSolarDate(selectedDate)}</CardDescription>
+          </div>
+          <Button
+            variant={favorited ? "default" : "outline"}
+            size="sm"
+            onClick={handleToggleFavorite}
+            className="shrink-0 gap-1.5"
+          >
+            {favorited ? (
+              <>
+                <Star className="h-4 w-4 fill-current" />
+                <span>已收藏</span>
+              </>
+            ) : (
+              <>
+                <StarOff className="h-4 w-4" />
+                <span>收藏</span>
+              </>
+            )}
+          </Button>
+        </div>
       </CardHeader>
       <CardContent className="space-y-4">
         <InfoRow label="农历" value={entry.lunar} />
