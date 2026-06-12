@@ -38,6 +38,21 @@ export interface FestivalEntry {
 export const CALENDAR_YEAR_MIN = 2020;
 export const CALENDAR_YEAR_MAX = 2030;
 
+export const LUNAR_MONTHS = [
+  "正月", "二月", "三月", "四月",
+  "五月", "六月", "七月", "八月",
+  "九月", "十月", "冬月", "腊月",
+];
+
+export const LUNAR_DAYS = [
+  "初一", "初二", "初三", "初四", "初五",
+  "初六", "初七", "初八", "初九", "初十",
+  "十一", "十二", "十三", "十四", "十五",
+  "十六", "十七", "十八", "十九", "二十",
+  "廿一", "廿二", "廿三", "廿四", "廿五",
+  "廿六", "廿七", "廿八", "廿九", "三十",
+];
+
 const days = calendarData.days as Record<string, DayEntry>;
 const solarTermsByYear = calendarData.solarTermsByYear as Record<
   string,
@@ -190,4 +205,48 @@ export function getNextSolarTerm(fromDate: Date = new Date()): NextSolarTerm | n
     time: nextTerm.time,
     daysLeft,
   };
+}
+
+export interface ReverseLookupResult {
+  dateKey: string;
+  date: Date;
+  lunar: string;
+  lunarMonth: string;
+  lunarDay: string;
+  ganZhi: DayEntry["ganZhi"];
+  solarTerm: string | null;
+  festivals: string[];
+}
+
+export function reverseLookupLunar(
+  lunarMonth: string,
+  lunarDay: string,
+): ReverseLookupResult[] {
+  const results: ReverseLookupResult[] = [];
+
+  const startDate = new Date(CALENDAR_YEAR_MIN, 0, 1);
+  const endDate = new Date(CALENDAR_YEAR_MAX, 11, 31);
+
+  for (let d = new Date(startDate); d <= endDate; d.setDate(d.getDate() + 1)) {
+    const key = formatDateKey(d);
+    const entry = days[key];
+    if (
+      entry &&
+      entry.lunarMonth === lunarMonth &&
+      entry.lunarDay === lunarDay
+    ) {
+      results.push({
+        dateKey: key,
+        date: new Date(d),
+        lunar: entry.lunar,
+        lunarMonth: entry.lunarMonth,
+        lunarDay: entry.lunarDay,
+        ganZhi: { ...entry.ganZhi },
+        solarTerm: entry.solarTerm,
+        festivals: [...entry.festivals],
+      });
+    }
+  }
+
+  return results;
 }
