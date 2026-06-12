@@ -3,10 +3,13 @@
 import { create } from "zustand";
 import { persist, createJSONStorage } from "zustand/middleware";
 import {
+  CALENDAR_YEAR_MAX,
+  CALENDAR_YEAR_MIN,
   DateValidationResult,
   formatDateKey,
   parseDateInput,
 } from "@/lib/calendar";
+import { getPersistStorage } from "@/lib/client-storage";
 
 interface DateStore {
   selectedDate: Date;
@@ -14,6 +17,22 @@ interface DateStore {
   setHydrated: () => void;
   setSelectedDate: (date: Date) => void;
   setSelectedDateFromString: (input: string) => DateValidationResult;
+}
+
+const DATE_KEY_REGEX = /^\d{4}-\d{2}-\d{2}$/;
+
+function isValidDateKey(key: string): boolean {
+  if (!DATE_KEY_REGEX.test(key)) return false;
+  const [year, month, day] = key.split("-").map(Number);
+  if (year < CALENDAR_YEAR_MIN || year > CALENDAR_YEAR_MAX) return false;
+  if (month < 1 || month > 12) return false;
+  if (day < 1 || day > 31) return false;
+  const date = new Date(year, month - 1, day);
+  return (
+    date.getFullYear() === year &&
+    date.getMonth() === month - 1 &&
+    date.getDate() === day
+  );
 }
 
 export const useDateStore = create<DateStore>()(
@@ -35,25 +54,24 @@ export const useDateStore = create<DateStore>()(
     }),
     {
       name: "lunar-calendar-selected-date",
-      storage: createJSONStorage(() => localStorage),
-      serialize: (state) => {
-        return JSON.stringify({
-          state: {
-            ...state.state,
-            selectedDate: formatDateKey(state.state.selectedDate),
-          },
-          version: state.version,
-        });
-      },
-      deserialize: (str) => {
-        const parsed = JSON.parse(str);
-        const dateKey = parsed.state.selectedDate;
-        if (dateKey && typeof dateKey === "string") {
-          const [year, month, day] = dateKey.split("-").map(Number);
-          parsed.state.selectedDate = new Date(year, month - 1, day);
-        }
-        return parsed;
-      },
+      storage: createJSONStorage(() => getPersistStorage(), {
+        replacer: (_key, value) => {
+          if (value instanceof Date) {
+            return formatDateKey(value);
+          }
+          return value;
+        },
+        reviver: (_key, value) => {
+          if (typeof value === "string" && DATE_KEY_REGEX.test(value)) {
+            if (isValidDateKey(value)) {
+              const [year, month, day] = value.split("-").map(Number);
+              return new Date(year, month - 1, day);
+            }
+            return new Date();
+          }
+          return value;
+        },
+      }),
       onRehydrateStorage: () => (state) => {
         if (state) {
           state.setHydrated();

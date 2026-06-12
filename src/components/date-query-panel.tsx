@@ -160,7 +160,7 @@ function DateInputForm() {
  * 公历日期选择器
  */
 export function DatePickerPanel() {
-  const { selectedDate, setSelectedDate } = useDateStore();
+  const { selectedDate, setSelectedDate, hydrated } = useDateStore();
   const [month, setMonth] = useState<Date>(selectedDate);
 
   useEffect(() => {
@@ -181,20 +181,31 @@ export function DatePickerPanel() {
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-6">
-        <DateInputForm />
-        <div className="flex justify-center border-t pt-6">
-          <Calendar
-            mode="single"
-            selected={selectedDate}
-            onSelect={(date) => date && setSelectedDate(date)}
-            month={month}
-            onMonthChange={setMonth}
-            locale={zhCN}
-            fromDate={new Date(CALENDAR_YEAR_MIN, 0, 1)}
-            toDate={new Date(CALENDAR_YEAR_MAX, 11, 31)}
-            modifiers={{ solarTerm: solarTermDates }}
-          />
-        </div>
+        {!hydrated ? (
+          <div className="flex items-center justify-center py-12">
+            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+              <div className="h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent" />
+              <span>加载中...</span>
+            </div>
+          </div>
+        ) : (
+          <>
+            <DateInputForm />
+            <div className="flex justify-center border-t pt-6">
+              <Calendar
+                mode="single"
+                selected={selectedDate}
+                onSelect={(date) => date && setSelectedDate(date)}
+                month={month}
+                onMonthChange={setMonth}
+                locale={zhCN}
+                fromDate={new Date(CALENDAR_YEAR_MIN, 0, 1)}
+                toDate={new Date(CALENDAR_YEAR_MAX, 11, 31)}
+                modifiers={{ solarTerm: solarTermDates }}
+              />
+            </div>
+          </>
+        )}
       </CardContent>
     </Card>
   );
@@ -205,10 +216,30 @@ export function DatePickerPanel() {
  */
 export function DayInfoPanel() {
   const selectedDate = useDateStore((s) => s.selectedDate);
+  const dateHydrated = useDateStore((s) => s.hydrated);
   const entry = getDayEntry(selectedDate);
-  const { isFavorite, toggleFavorite, hydrated } = useFavoritesStore();
+  const { isFavorite, toggleFavorite, hydrated: favoritesHydrated } = useFavoritesStore();
   const dateKey = formatDateKey(selectedDate);
-  const favorited = entry && hydrated ? isFavorite(dateKey) : false;
+  const favorited = entry && dateHydrated && favoritesHydrated ? isFavorite(dateKey) : false;
+
+  if (!dateHydrated) {
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-lg">日期信息</CardTitle>
+          <CardDescription>正在恢复日期...</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="flex items-center justify-center py-8">
+            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+              <div className="h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent" />
+              <span>加载中...</span>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
 
   if (!entry) {
     return (
@@ -229,7 +260,7 @@ export function DayInfoPanel() {
   const solarTermDisplay = entry.solarTerm ?? "无";
 
   const handleToggleFavorite = () => {
-    if (entry && hydrated) {
+    if (entry && favoritesHydrated) {
       toggleFavorite(selectedDate, entry);
     }
   };
@@ -246,10 +277,10 @@ export function DayInfoPanel() {
             variant={favorited ? "default" : "outline"}
             size="sm"
             onClick={handleToggleFavorite}
-            disabled={!hydrated}
+            disabled={!favoritesHydrated}
             className="shrink-0 gap-1.5"
           >
-            {!hydrated ? (
+            {!favoritesHydrated ? (
               <>
                 <div className="h-4 w-4 animate-pulse rounded-full bg-current opacity-50" />
                 <span>加载中</span>
