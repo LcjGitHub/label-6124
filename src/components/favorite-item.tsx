@@ -7,6 +7,8 @@ import { FavoriteItem } from "@/store/favorites-store";
 import { Trash2 } from "lucide-react";
 import { format } from "date-fns";
 import { zhCN } from "date-fns/locale";
+import { useRouter } from "next/navigation";
+import { cn } from "@/lib/utils";
 
 interface FavoriteItemCardProps {
   item: FavoriteItem;
@@ -14,12 +16,27 @@ interface FavoriteItemCardProps {
 }
 
 export function FavoriteItemCard({ item, onRemove }: FavoriteItemCardProps) {
+  const router = useRouter();
   const [year, month, day] = item.dateKey.split("-").map(Number);
   const date = new Date(year, month - 1, day);
   const solarDateStr = format(date, "yyyy年M月d日 EEEE", { locale: zhCN });
 
+  const handleCardClick = () => {
+    router.push(`/?date=${item.dateKey}`);
+  };
+
+  const handleRemoveClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    onRemove(item.dateKey);
+  };
+
   return (
-    <Card className="transition-all hover:shadow-md">
+    <Card 
+      className={cn(
+        "transition-all hover:shadow-md cursor-pointer hover:border-primary/50"
+      )}
+      onClick={handleCardClick}
+    >
       <CardContent className="p-4">
         <div className="flex items-start justify-between gap-3">
           <div className="flex-1 space-y-2">
@@ -65,7 +82,7 @@ export function FavoriteItemCard({ item, onRemove }: FavoriteItemCardProps) {
           <Button
             variant="ghost"
             size="icon"
-            onClick={() => onRemove(item.dateKey)}
+            onClick={handleRemoveClick}
             className="shrink-0 text-muted-foreground hover:text-destructive hover:bg-destructive/10"
             title="取消收藏"
           >

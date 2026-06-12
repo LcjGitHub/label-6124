@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { Suspense } from "react";
 import { SiteHeader } from "@/components/site-header";
 import "./globals.css";
 
@@ -20,7 +21,7 @@ export default function RootLayout({
       <body className="min-h-screen antialiased">
         <SiteHeader />
         <main className="container mx-auto max-w-4xl px-4 py-6 sm:py-8">
-          {children}
+          <Suspense fallback={null}>{children}</Suspense>
         </main>
       </body>
     </html>

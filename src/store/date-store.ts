@@ -14,9 +14,11 @@ import { getPersistStorage } from "@/lib/client-storage";
 interface DateStore {
   selectedDate: Date;
   hydrated: boolean;
+  highlightedDateKey: string | null;
   setHydrated: () => void;
   setSelectedDate: (date: Date) => void;
   setSelectedDateFromString: (input: string) => DateValidationResult;
+  setHighlightedDateKey: (dateKey: string | null) => void;
 }
 
 const DATE_KEY_REGEX = /^\d{4}-\d{2}-\d{2}$/;
@@ -40,6 +42,7 @@ export const useDateStore = create<DateStore>()(
     (set) => ({
       selectedDate: new Date(),
       hydrated: false,
+      highlightedDateKey: null,
 
       setHydrated: () => set({ hydrated: true }),
 
@@ -51,6 +54,7 @@ export const useDateStore = create<DateStore>()(
         }
         return result;
       },
+      setHighlightedDateKey: (dateKey) => set({ highlightedDateKey: dateKey }),
     }),
     {
       name: "lunar-calendar-selected-date",

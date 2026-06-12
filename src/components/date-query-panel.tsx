@@ -220,9 +220,11 @@ type CopyStatus = "idle" | "success" | "error";
 export function DayInfoPanel() {
   const selectedDate = useDateStore((s) => s.selectedDate);
   const dateHydrated = useDateStore((s) => s.hydrated);
+  const highlightedDateKey = useDateStore((s) => s.highlightedDateKey);
   const entry = getDayEntry(selectedDate);
   const { isFavorite, toggleFavorite, hydrated: favoritesHydrated } = useFavoritesStore();
   const dateKey = formatDateKey(selectedDate);
+  const isHighlighted = highlightedDateKey === dateKey;
   const favorited = entry && dateHydrated && favoritesHydrated ? isFavorite(dateKey) : false;
   const [copyStatus, setCopyStatus] = useState<CopyStatus>("idle");
   const copyTimeoutRef = useRef<NodeJS.Timeout | null>(null);
@@ -296,7 +298,12 @@ export function DayInfoPanel() {
   }
 
   return (
-    <Card>
+    <Card
+      className={cn(
+        "transition-all duration-500",
+        isHighlighted && "ring-2 ring-primary ring-offset-2 animate-pulse"
+      )}
+    >
       <CardHeader>
         <div className="flex flex-wrap items-center justify-between gap-2">
           <div>
