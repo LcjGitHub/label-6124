@@ -11,14 +11,11 @@ import {
 } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import {
-  CALENDAR_YEAR_MAX,
-  CALENDAR_YEAR_MIN,
   formatSolarDate,
   getDayEntry,
   type DayEntry,
 } from "@/lib/calendar";
 import { zhCN } from "date-fns/locale";
-import { ArrowLeftRight } from "lucide-react";
 
 interface DateCompareSideProps {
   title: string;
@@ -32,17 +29,17 @@ function DateCompareSide({ title, date, onDateChange }: DateCompareSideProps) {
       <CardHeader>
         <CardTitle className="text-lg">{title}</CardTitle>
         <CardDescription>
-          数据范围 {CALENDAR_YEAR_MIN}–{CALENDAR_YEAR_MAX} 年
+          数据范围二零二零–二零三零年
         </CardDescription>
       </CardHeader>
       <CardContent className="flex justify-center">
         <Calendar
           mode="single"
           selected={date}
-          onSelect={onDateChange}
+          onSelect={(d) => d && onDateChange(d)}
           locale={zhCN}
-          fromDate={new Date(CALENDAR_YEAR_MIN, 0, 1)}
-          toDate={new Date(CALENDAR_YEAR_MAX, 11, 31)}
+          fromDate={new Date(2020, 0, 1)}
+          toDate={new Date(2030, 11, 31)}
           defaultMonth={date}
         />
       </CardContent>
@@ -64,7 +61,7 @@ function InfoDisplay({ title, date }: InfoDisplayProps) {
           <CardDescription>请选择日期</CardDescription>
         </CardHeader>
         <CardContent>
-          <p className="text-sm text-muted-foreground">请在上方选择一个公历日期</p>
+          <p className="text-sm text-muted-foreground">请选择一个公历日期</p>
         </CardContent>
       </Card>
     );
@@ -81,7 +78,7 @@ function InfoDisplay({ title, date }: InfoDisplayProps) {
         </CardHeader>
         <CardContent>
           <p className="text-sm text-muted-foreground">
-            该日期不在 Mock 数据范围内（{CALENDAR_YEAR_MIN}–{CALENDAR_YEAR_MAX}）。
+            该日期不在模拟数据范围内（二零二零–二零三零年）。
           </p>
         </CardContent>
       </Card>
@@ -107,7 +104,7 @@ function InfoDisplay({ title, date }: InfoDisplayProps) {
           value={solarTermDisplay}
           highlight={!!entry.solarTerm}
         />
-        {entry.festivals.length > 0 ? (
+        {entry.festivals.length > 0 && (
           <div className="space-y-2">
             <span className="text-sm font-medium text-muted-foreground">节日标签</span>
             <div className="flex flex-wrap gap-2">
@@ -117,11 +114,6 @@ function InfoDisplay({ title, date }: InfoDisplayProps) {
                 </Badge>
               ))}
             </div>
-          </div>
-        ) : (
-          <div className="space-y-2">
-            <span className="text-sm font-medium text-muted-foreground">节日标签</span>
-            <p className="text-base font-medium text-muted-foreground">无</p>
           </div>
         )}
       </CardContent>
@@ -153,47 +145,27 @@ function InfoRow({ label, value, highlight }: InfoRowProps) {
 }
 
 export function DateComparePanel() {
-  const [leftDate, setLeftDate] = useState<Date | undefined>(new Date());
-  const [rightDate, setRightDate] = useState<Date | undefined>(() => {
-    const d = new Date();
-    d.setDate(d.getDate() + 7);
-    return d;
-  });
-
-  const handleSwap = () => {
-    const temp = leftDate;
-    setLeftDate(rightDate);
-    setRightDate(temp);
-  };
+  const [leftDate, setLeftDate] = useState<Date | undefined>(undefined);
+  const [rightDate, setRightDate] = useState<Date | undefined>(undefined);
 
   return (
     <div className="space-y-6">
       <div className="grid gap-6 md:grid-cols-2">
         <DateCompareSide
-          title="日期 A"
+          title="左侧日期"
           date={leftDate}
           onDateChange={setLeftDate}
         />
         <DateCompareSide
-          title="日期 B"
+          title="右侧日期"
           date={rightDate}
           onDateChange={setRightDate}
         />
       </div>
 
-      <div className="flex justify-center">
-        <button
-          onClick={handleSwap}
-          className="inline-flex items-center gap-2 rounded-md border border-input bg-background px-4 py-2 text-sm font-medium text-muted-foreground shadow-sm transition-colors hover:bg-accent hover:text-accent-foreground"
-        >
-          <ArrowLeftRight className="h-4 w-4" />
-          交换日期
-        </button>
-      </div>
-
       <div className="grid gap-6 md:grid-cols-2">
-        <InfoDisplay title="日期 A 信息" date={leftDate} />
-        <InfoDisplay title="日期 B 信息" date={rightDate} />
+        <InfoDisplay title="左侧信息" date={leftDate} />
+        <InfoDisplay title="右侧信息" date={rightDate} />
       </div>
     </div>
   );
