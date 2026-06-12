@@ -26,7 +26,7 @@ import { formatDateKey } from "@/lib/calendar";
 export function SolarTermsTimeline() {
   const router = useRouter();
   const selectedDate = useDateStore((s) => s.selectedDate);
-  const setSelectedDate = useDateStore((s) => s.setSelectedDate);
+  const setSelectedDateFromString = useDateStore((s) => s.setSelectedDateFromString);
   const year = selectedDate.getFullYear();
   const todayKey = formatDateKey(new Date());
   const selectedKey = formatDateKey(selectedDate);
@@ -36,10 +36,10 @@ export function SolarTermsTimeline() {
   const inRange = year >= CALENDAR_YEAR_MIN && year <= CALENDAR_YEAR_MAX;
 
   const handleTermClick = (dateStr: string) => {
-    const [y, m, d] = dateStr.split("-").map(Number);
-    const date = new Date(y, m - 1, d);
-    setSelectedDate(date);
-    router.push("/");
+    const result = setSelectedDateFromString(dateStr);
+    if (result.valid) {
+      router.push("/");
+    }
   };
 
   return (
@@ -47,7 +47,7 @@ export function SolarTermsTimeline() {
       <CardHeader>
         <CardTitle className="text-lg">{year} 年节气时间轴</CardTitle>
         <CardDescription>
-          共 24 个节气 · Mock 数据 · 点击节气条目可跳转至当日详情
+          共 24 个节气 · Mock 数据
           {!inRange && ` · 超出范围（${CALENDAR_YEAR_MIN}–${CALENDAR_YEAR_MAX}）`}
         </CardDescription>
       </CardHeader>
@@ -75,12 +75,13 @@ export function SolarTermsTimeline() {
                           : "border-muted-foreground/40"
                     )}
                   />
-                  <div
+                  <button
+                    type="button"
                     onClick={() => handleTermClick(term.date)}
                     className={cn(
-                      "rounded-lg border p-3 sm:p-4 transition-colors cursor-pointer hover:bg-accent/50 hover:border-accent",
-                      isSelected && "border-primary bg-primary/5 hover:bg-primary/10",
-                      isToday && !isSelected && "border-orange-200 bg-orange-50 dark:border-orange-900 dark:bg-orange-950/30 hover:bg-orange-100 dark:hover:bg-orange-950/50"
+                      "w-full text-left rounded-lg border p-3 sm:p-4 transition-colors cursor-pointer",
+                      isSelected && "border-primary bg-primary/5",
+                      isToday && !isSelected && "border-orange-200 bg-orange-50 dark:border-orange-900 dark:bg-orange-950/30"
                     )}
                   >
                     <div className="flex flex-wrap items-center gap-2">
@@ -103,7 +104,7 @@ export function SolarTermsTimeline() {
                     <p className="mt-1 text-sm text-muted-foreground">
                       {formatSolarTermDateTime(term)}
                     </p>
-                  </div>
+                  </button>
                 </li>
               );
             })}
