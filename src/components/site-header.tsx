@@ -2,12 +2,13 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { CalendarDays, Sun } from "lucide-react";
+import { CalendarDays, Sun, PartyPopper } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const NAV_ITEMS = [
   { href: "/", label: "日期查询", icon: CalendarDays },
   { href: "/solar-terms", label: "节气时间轴", icon: Sun },
+  { href: "/festivals", label: "节日一览", icon: PartyPopper },
 ];
 
 /**

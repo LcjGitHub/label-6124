@@ -23,6 +23,17 @@ export interface SolarTermEntry {
   time: string;
 }
 
+/** 节日条目（包含公历日期字符串） */
+export interface FestivalEntry {
+  dateKey: string;
+  date: Date;
+  lunar: string;
+  lunarMonth: string;
+  lunarDay: string;
+  festivals: string[];
+  solarTerm: string | null;
+}
+
 /** Mock 数据覆盖年份范围 */
 export const CALENDAR_YEAR_MIN = 2020;
 export const CALENDAR_YEAR_MAX = 2030;
@@ -78,4 +89,34 @@ export function formatSolarTermDateTime(entry: SolarTermEntry): string {
   const [y, m, d] = entry.date.split("-").map(Number);
   const date = new Date(y, m - 1, d);
   return `${format(date, "M月d日", { locale: zhCN })} ${entry.time}`;
+}
+
+/**
+ * 获取指定年份的全部带节日的日期列表
+ * 按公历日期升序排列，无节日的日期不返回
+ */
+export function getFestivalsForYear(year: number): FestivalEntry[] {
+  if (year < CALENDAR_YEAR_MIN || year > CALENDAR_YEAR_MAX) return [];
+
+  const result: FestivalEntry[] = [];
+  const startDate = new Date(year, 0, 1);
+  const endDate = new Date(year, 11, 31);
+
+  for (let d = new Date(startDate); d <= endDate; d.setDate(d.getDate() + 1)) {
+    const key = formatDateKey(d);
+    const entry = days[key];
+    if (entry && entry.festivals.length > 0) {
+      result.push({
+        dateKey: key,
+        date: new Date(d),
+        lunar: entry.lunar,
+        lunarMonth: entry.lunarMonth,
+        lunarDay: entry.lunarDay,
+        festivals: [...entry.festivals],
+        solarTerm: entry.solarTerm,
+      });
+    }
+  }
+
+  return result;
 }
