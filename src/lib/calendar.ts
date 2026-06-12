@@ -351,19 +351,15 @@ export function validateGregorianDate(
  */
 export function formatDateSummary(date: Date, entry: DayEntry): string {
   const solarDate = formatSolarDate(date);
-  const parts: string[] = [];
 
-  parts.push(`公历：${solarDate}`);
-  parts.push(`农历：${entry.lunar}`);
-  parts.push(`干支：${entry.ganZhi.year}年 ${entry.ganZhi.month}月 ${entry.ganZhi.day}日`);
+  const solarTerm = entry.solarTerm ?? "无";
+  const festivals = entry.festivals.length > 0 ? entry.festivals.join("、") : "无";
 
-  if (entry.solarTerm) {
-    parts.push(`节气：${entry.solarTerm}`);
-  }
-
-  if (entry.festivals.length > 0) {
-    parts.push(`节日：${entry.festivals.join("、")}`);
-  }
-
-  return parts.join("；") + "。";
+  return [
+    `公历：${solarDate}`,
+    `农历：${entry.lunar}`,
+    `干支：${entry.ganZhi.year}年 ${entry.ganZhi.month}月 ${entry.ganZhi.day}日`,
+    `节气：${solarTerm}`,
+    `节日：${festivals}`,
+  ].join("；") + "。";
 }

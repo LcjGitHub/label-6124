@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState, useEffect, useRef } from "react";
+import { useMemo } from "react";
 import {
   Card,
   CardContent,
@@ -9,22 +9,16 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import {
   CALENDAR_YEAR_MAX,
   CALENDAR_YEAR_MIN,
-  formatDateSummary,
   formatSolarDate,
   formatSolarTermDateTime,
-  getDayEntry,
   getNextSolarTerm,
   getTodayOverview,
   SolarTermEntry,
 } from "@/lib/calendar";
-import { Copy, Check, X } from "lucide-react";
 import { cn } from "@/lib/utils";
-
-type CopyStatus = "idle" | "success" | "error";
 
 interface InfoRowProps {
   label: string;
@@ -50,47 +44,13 @@ function InfoRow({ label, value, highlight }: InfoRowProps) {
 }
 
 export function TodayOverview() {
-  const today = useMemo(() => new Date(), []);
   const overview = useMemo(() => getTodayOverview(), []);
   const nextTerm = useMemo(() => getNextSolarTerm(), []);
-  const [copyStatus, setCopyStatus] = useState<CopyStatus>("idle");
-  const copyTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
+  const today = new Date();
   const inRange =
     today.getFullYear() >= CALENDAR_YEAR_MIN &&
     today.getFullYear() <= CALENDAR_YEAR_MAX;
-
-  const dayEntry = useMemo(() => {
-    if (!inRange) return null;
-    return getDayEntry(today);
-  }, [inRange, today]);
-
-  const handleCopy = async () => {
-    if (!dayEntry) return;
-
-    try {
-      const summary = formatDateSummary(today, dayEntry);
-      await navigator.clipboard.writeText(summary);
-      setCopyStatus("success");
-    } catch (e) {
-      setCopyStatus("error");
-    }
-
-    if (copyTimeoutRef.current) {
-      clearTimeout(copyTimeoutRef.current);
-    }
-    copyTimeoutRef.current = setTimeout(() => {
-      setCopyStatus("idle");
-    }, 2000);
-  };
-
-  useEffect(() => {
-    return () => {
-      if (copyTimeoutRef.current) {
-        clearTimeout(copyTimeoutRef.current);
-      }
-    };
-  }, []);
 
   if (!overview || !inRange) {
     return (
@@ -174,45 +134,6 @@ export function TodayOverview() {
                 </span>
               )}
             </div>
-          </div>
-        </div>
-        <div className="border-t pt-4">
-          <div className="flex items-center justify-between gap-3">
-            <div className="flex items-center gap-2">
-              {copyStatus === "success" && (
-                <span className="flex items-center gap-1 text-sm font-medium text-green-600">
-                  <Check className="h-4 w-4" />
-                  复制成功
-                </span>
-              )}
-              {copyStatus === "error" && (
-                <span className="flex items-center gap-1 text-sm font-medium text-destructive">
-                  <X className="h-4 w-4" />
-                  复制失败
-                </span>
-              )}
-              {copyStatus === "idle" && (
-                <span className="text-sm text-muted-foreground">
-                  一键复制今日摘要
-                </span>
-              )}
-            </div>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={handleCopy}
-              disabled={!dayEntry}
-              className="shrink-0 gap-1.5"
-            >
-              {copyStatus === "success" ? (
-                <Check className="h-4 w-4" />
-              ) : copyStatus === "error" ? (
-                <X className="h-4 w-4" />
-              ) : (
-                <Copy className="h-4 w-4" />
-              )}
-              {copyStatus === "idle" ? "复制" : copyStatus === "success" ? "已复制" : "重试"}
-            </Button>
           </div>
         </div>
       </CardContent>
