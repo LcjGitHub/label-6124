@@ -59,27 +59,26 @@ const solarTermsByYear = calendarData.solarTermsByYear as Record<
   SolarTermEntry[]
 >;
 
-/**
- * 将 Date 格式化为 yyyy-MM-dd
- */
 export function formatDateKey(date: Date): string {
   return format(date, "yyyy-MM-dd");
 }
 
-/**
- * 判断日期是否在 Mock 数据覆盖范围内
- */
 export function isDateInRange(date: Date): boolean {
   const year = date.getFullYear();
   return year >= CALENDAR_YEAR_MIN && year <= CALENDAR_YEAR_MAX;
 }
 
-/**
- * 获取指定日期的 Mock 日历数据
- */
 export function getDayEntry(date: Date): DayEntry | null {
   if (!isDateInRange(date)) return null;
   return days[formatDateKey(date)] ?? null;
+}
+
+export function formatGanZhi(entry: DayEntry): string {
+  return `${entry.ganZhi.year}年 · ${entry.ganZhi.month}月 · ${entry.ganZhi.day}日`;
+}
+
+export function formatSolarTermDisplay(entry: DayEntry): string {
+  return entry.solarTerm ?? "无";
 }
 
 /**
@@ -109,19 +108,13 @@ export function getSolarTermsForMonth(
     });
 }
 
-/**
- * 格式化公历日期为中文展示
- */
 export function formatSolarDate(date: Date): string {
   return format(date, "yyyy年M月d日 EEEE", { locale: zhCN });
 }
 
-/**
- * 格式化节气日期时间
- */
 export function formatSolarTermDateTime(entry: SolarTermEntry): string {
-  const [y, m, d] = entry.date.split("-").map(Number);
-  const date = new Date(y, m - 1, d);
+  const [year, month, day] = entry.date.split("-").map(Number);
+  const date = new Date(year, month - 1, day);
   return `${format(date, "M月d日", { locale: zhCN })} ${entry.time}`;
 }
 
@@ -282,36 +275,42 @@ export function parseDateInput(input: string): DateValidationResult {
     return { valid: false, error: "请输入日期" };
   }
 
-  let year: number | null = null;
-  let month: number | null = null;
-  let day: number | null = null;
-
-  const dashMatch = trimmed.match(/^(\d{4})[\-/.](\d{1,2})[\-/.](\d{1,2})$/);
-  const chineseMatch = trimmed.match(/^(\d{4})年(\d{1,2})月(\d{1,2})日?$/);
-  const plainMatch = trimmed.match(/^(\d{4})(\d{2})(\d{2})$/);
-
-  if (dashMatch) {
-    year = parseInt(dashMatch[1], 10);
-    month = parseInt(dashMatch[2], 10);
-    day = parseInt(dashMatch[3], 10);
-  } else if (chineseMatch) {
-    year = parseInt(chineseMatch[1], 10);
-    month = parseInt(chineseMatch[2], 10);
-    day = parseInt(chineseMatch[3], 10);
-  } else if (plainMatch) {
-    year = parseInt(plainMatch[1], 10);
-    month = parseInt(plainMatch[2], 10);
-    day = parseInt(plainMatch[3], 10);
-  }
-
-  if (year === null || month === null || day === null) {
+  const result = extractYearMonthDay(trimmed);
+  if (!result) {
     return {
       valid: false,
       error: "格式错误，请输入完整的年、月、日，例如二〇二四年六月十五日",
     };
   }
 
-  return validateGregorianDate(year, month, day);
+  return validateGregorianDate(result.year, result.month, result.day);
+}
+
+interface ParsedDateParts {
+  year: number;
+  month: number;
+  day: number;
+}
+
+function extractYearMonthDay(input: string): ParsedDateParts | null {
+  const patterns: RegExp[] = [
+    /^(\d{4})[\-/.](\d{1,2})[\-/.](\d{1,2})$/,
+    /^(\d{4})年(\d{1,2})月(\d{1,2})日?$/,
+    /^(\d{4})(\d{2})(\d{2})$/,
+  ];
+
+  for (const pattern of patterns) {
+    const match = input.match(pattern);
+    if (match) {
+      return {
+        year: parseInt(match[1], 10),
+        month: parseInt(match[2], 10),
+        day: parseInt(match[3], 10),
+      };
+    }
+  }
+
+  return null;
 }
 
 export function validateGregorianDate(
@@ -319,46 +318,59 @@ export function validateGregorianDate(
   month: number,
   day: number,
 ): DateValidationResult {
-  if (year < CALENDAR_YEAR_MIN || year > CALENDAR_YEAR_MAX) {
+  if (!isYearInRange(year)) {
     return {
       valid: false,
       error: `年份超出范围，仅限 ${CALENDAR_YEAR_MIN}–${CALENDAR_YEAR_MAX} 年`,
     };
   }
 
-  if (month < 1 || month > 12) {
+  if (!isMonthValid(month)) {
     return { valid: false, error: "月份错误，应为 1–12" };
   }
 
-  if (day < 1 || day > 31) {
+  if (!isDayValid(day)) {
     return { valid: false, error: "日期错误，应为 1–31" };
   }
 
-  const date = new Date(year, month - 1, day);
-  if (
-    date.getFullYear() !== year ||
-    date.getMonth() !== month - 1 ||
-    date.getDate() !== day
-  ) {
+  if (!isDateExists(year, month, day)) {
     return { valid: false, error: "日期无效，该月没有这一天" };
   }
 
-  return { valid: true, date };
+  return { valid: true, date: new Date(year, month - 1, day) };
 }
 
-/**
- * 生成日期信息的可读中文摘要
- */
+function isYearInRange(year: number): boolean {
+  return year >= CALENDAR_YEAR_MIN && year <= CALENDAR_YEAR_MAX;
+}
+
+function isMonthValid(month: number): boolean {
+  return month >= 1 && month <= 12;
+}
+
+function isDayValid(day: number): boolean {
+  return day >= 1 && day <= 31;
+}
+
+function isDateExists(year: number, month: number, day: number): boolean {
+  const date = new Date(year, month - 1, day);
+  return (
+    date.getFullYear() === year &&
+    date.getMonth() === month - 1 &&
+    date.getDate() === day
+  );
+}
+
 export function formatDateSummary(date: Date, entry: DayEntry): string {
   const solarDate = formatSolarDate(date);
-
-  const solarTerm = entry.solarTerm ?? "无";
-  const festivals = entry.festivals.length > 0 ? entry.festivals.join("、") : "无";
+  const solarTerm = formatSolarTermDisplay(entry);
+  const festivals =
+    entry.festivals.length > 0 ? entry.festivals.join("、") : "无";
 
   return [
     `公历：${solarDate}`,
     `农历：${entry.lunar}`,
-    `干支：${entry.ganZhi.year}年 ${entry.ganZhi.month}月 ${entry.ganZhi.day}日`,
+    `干支：${formatGanZhi(entry)}`,
     `节气：${solarTerm}`,
     `节日：${festivals}`,
   ].join("；") + "。";

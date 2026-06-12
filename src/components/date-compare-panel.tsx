@@ -9,13 +9,15 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import {
+  CALENDAR_YEAR_MAX,
+  CALENDAR_YEAR_MIN,
   formatSolarDate,
   getDayEntry,
   type DayEntry,
 } from "@/lib/calendar";
 import { zhCN } from "date-fns/locale";
+import { DateInfoContent } from "@/components/date-info-display";
 
 interface DateCompareSideProps {
   title: string;
@@ -29,7 +31,7 @@ function DateCompareSide({ title, date, onDateChange }: DateCompareSideProps) {
       <CardHeader>
         <CardTitle className="text-lg">{title}</CardTitle>
         <CardDescription>
-          数据范围二零二零–二零三零年
+          数据范围 {CALENDAR_YEAR_MIN}–{CALENDAR_YEAR_MAX} 年
         </CardDescription>
       </CardHeader>
       <CardContent className="flex justify-center">
@@ -38,8 +40,8 @@ function DateCompareSide({ title, date, onDateChange }: DateCompareSideProps) {
           selected={date}
           onSelect={(d) => d && onDateChange(d)}
           locale={zhCN}
-          fromDate={new Date(2020, 0, 1)}
-          toDate={new Date(2030, 11, 31)}
+          fromDate={new Date(CALENDAR_YEAR_MIN, 0, 1)}
+          toDate={new Date(CALENDAR_YEAR_MAX, 11, 31)}
           defaultMonth={date}
         />
       </CardContent>
@@ -78,14 +80,12 @@ function InfoDisplay({ title, date }: InfoDisplayProps) {
         </CardHeader>
         <CardContent>
           <p className="text-sm text-muted-foreground">
-            该日期不在模拟数据范围内（二零二零–二零三零年）。
+            该日期不在模拟数据范围内（{CALENDAR_YEAR_MIN}–{CALENDAR_YEAR_MAX} 年）。
           </p>
         </CardContent>
       </Card>
     );
   }
-
-  const solarTermDisplay = entry.solarTerm ?? "无";
 
   return (
     <Card>
@@ -94,53 +94,9 @@ function InfoDisplay({ title, date }: InfoDisplayProps) {
         <CardDescription>{formatSolarDate(date)}</CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
-        <InfoRow label="农历" value={entry.lunar} />
-        <InfoRow
-          label="干支"
-          value={`${entry.ganZhi.year}年 · ${entry.ganZhi.month}月 · ${entry.ganZhi.day}日`}
-        />
-        <InfoRow
-          label="当日节气"
-          value={solarTermDisplay}
-          highlight={!!entry.solarTerm}
-        />
-        {entry.festivals.length > 0 && (
-          <div className="space-y-2">
-            <span className="text-sm font-medium text-muted-foreground">节日标签</span>
-            <div className="flex flex-wrap gap-2">
-              {entry.festivals.map((f) => (
-                <Badge key={f} variant="secondary">
-                  {f}
-                </Badge>
-              ))}
-            </div>
-          </div>
-        )}
+        <DateInfoContent entry={entry} />
       </CardContent>
     </Card>
-  );
-}
-
-interface InfoRowProps {
-  label: string;
-  value: string;
-  highlight?: boolean;
-}
-
-function InfoRow({ label, value, highlight }: InfoRowProps) {
-  return (
-    <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
-      <span className="text-sm font-medium text-muted-foreground">{label}</span>
-      <span
-        className={
-          highlight
-            ? "text-base font-semibold text-primary"
-            : "text-base font-medium"
-        }
-      >
-        {value}
-      </span>
-    </div>
   );
 }
 

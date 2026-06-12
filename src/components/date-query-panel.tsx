@@ -9,7 +9,6 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { useDateStore } from "@/store/date-store";
 import { useFavoritesStore } from "@/store/favorites-store";
@@ -26,6 +25,7 @@ import {
 import { zhCN } from "date-fns/locale";
 import { Star, StarOff, ArrowRight, Copy, Check, X } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { DateInfoContent } from "@/components/date-info-display";
 
 function DateInputForm() {
   const { selectedDate, setSelectedDateFromString } = useDateStore();
@@ -227,8 +227,6 @@ export function DayInfoPanel() {
   const [copyStatus, setCopyStatus] = useState<CopyStatus>("idle");
   const copyTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
-  const solarTermDisplay = entry?.solarTerm ?? "无";
-
   const handleToggleFavorite = () => {
     if (entry && favoritesHydrated) {
       toggleFavorite(selectedDate, entry);
@@ -332,24 +330,7 @@ export function DayInfoPanel() {
         </div>
       </CardHeader>
       <CardContent className="space-y-4">
-        <InfoRow label="农历" value={entry.lunar} />
-        <InfoRow
-          label="干支"
-          value={`${entry.ganZhi.year}年 · ${entry.ganZhi.month}月 · ${entry.ganZhi.day}日`}
-        />
-        <InfoRow label="当日节气" value={solarTermDisplay} highlight={!!entry.solarTerm} />
-        {entry.festivals.length > 0 && (
-          <div className="space-y-2">
-            <span className="text-sm font-medium text-muted-foreground">节日标签</span>
-            <div className="flex flex-wrap gap-2">
-              {entry.festivals.map((f) => (
-                <Badge key={f} variant="secondary">
-                  {f}
-                </Badge>
-              ))}
-            </div>
-          </div>
-        )}
+        <DateInfoContent entry={entry} />
         <div className="border-t pt-4">
           <div className="flex items-center justify-between gap-3">
             <div className="flex items-center gap-2">
@@ -390,31 +371,5 @@ export function DayInfoPanel() {
         </div>
       </CardContent>
     </Card>
-  );
-}
-
-interface InfoRowProps {
-  label: string;
-  value: string;
-  highlight?: boolean;
-}
-
-/**
- * 信息行展示
- */
-function InfoRow({ label, value, highlight }: InfoRowProps) {
-  return (
-    <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
-      <span className="text-sm font-medium text-muted-foreground">{label}</span>
-      <span
-        className={
-          highlight
-            ? "text-base font-semibold text-primary"
-            : "text-base font-medium"
-        }
-      >
-        {value}
-      </span>
-    </div>
   );
 }
