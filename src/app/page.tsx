@@ -1,4 +1,5 @@
 import { DatePickerPanel, DayInfoPanel } from "@/components/date-query-panel";
+import { TodayOverview } from "@/components/today-overview";
 
 /**
  * 首页：公历日期查询
@@ -14,6 +15,7 @@ export default function HomePage() {
           选择公历日期，查看农历、干支、节气与节日标签
         </p>
       </div>
+      <TodayOverview />
       <div className="grid gap-6 md:grid-cols-2">
         <DatePickerPanel />
         <DayInfoPanel />

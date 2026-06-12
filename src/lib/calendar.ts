@@ -120,3 +120,77 @@ export function getFestivalsForYear(year: number): FestivalEntry[] {
 
   return result;
 }
+
+/**
+ * 今日概览信息
+ */
+export interface TodayOverview {
+  date: Date;
+  lunar: string;
+  ganZhiYear: string;
+  ganZhiMonth: string;
+  ganZhiDay: string;
+  solarTerm: string | null;
+}
+
+/**
+ * 获取今日概览信息（农历、干支、节气）
+ */
+export function getTodayOverview(): TodayOverview | null {
+  const today = new Date();
+  const entry = getDayEntry(today);
+  if (!entry) return null;
+  return {
+    date: today,
+    lunar: entry.lunar,
+    ganZhiYear: entry.ganZhi.year,
+    ganZhiMonth: entry.ganZhi.month,
+    ganZhiDay: entry.ganZhi.day,
+    solarTerm: entry.solarTerm,
+  };
+}
+
+/**
+ * 下一节气信息
+ */
+export interface NextSolarTerm {
+  name: string;
+  date: string;
+  daysLeft: number;
+}
+
+/**
+ * 计算两个日期之间相差的天数（date2 - date1）
+ */
+function diffInDays(date1: Date, date2: Date): number {
+  const d1 = new Date(date1.getFullYear(), date1.getMonth(), date1.getDate());
+  const d2 = new Date(date2.getFullYear(), date2.getMonth(), date2.getDate());
+  return Math.round((d2.getTime() - d1.getTime()) / (1000 * 60 * 60 * 24));
+}
+
+/**
+ * 获取当年下一个节气信息（含当天节气），如果当年已无节气则取下一年第一个节气
+ */
+export function getNextSolarTerm(fromDate: Date = new Date()): NextSolarTerm | null {
+  const fromKey = formatDateKey(fromDate);
+  let year = fromDate.getFullYear();
+  let terms = getSolarTermsForYear(year);
+  let nextTerm = terms.find((t) => t.date >= fromKey);
+
+  if (!nextTerm && year < CALENDAR_YEAR_MAX) {
+    terms = getSolarTermsForYear(year + 1);
+    nextTerm = terms[0] ?? null;
+  }
+
+  if (!nextTerm) return null;
+
+  const [y, m, d] = nextTerm.date.split("-").map(Number);
+  const termDate = new Date(y, m - 1, d);
+  const daysLeft = diffInDays(fromDate, termDate);
+
+  return {
+    name: nextTerm.name,
+    date: nextTerm.date,
+    daysLeft,
+  };
+}
