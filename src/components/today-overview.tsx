@@ -13,8 +13,10 @@ import {
   CALENDAR_YEAR_MAX,
   CALENDAR_YEAR_MIN,
   formatSolarDate,
+  formatSolarTermDateTime,
   getNextSolarTerm,
   getTodayOverview,
+  SolarTermEntry,
 } from "@/lib/calendar";
 import { cn } from "@/lib/utils";
 
@@ -59,19 +61,23 @@ export function TodayOverview() {
         </CardHeader>
         <CardContent>
           <p className="text-sm text-muted-foreground">
-            今日不在 Mock 数据范围内（{CALENDAR_YEAR_MIN}–{CALENDAR_YEAR_MAX}）。
+            今日不在数据支持范围内（{CALENDAR_YEAR_MIN}–{CALENDAR_YEAR_MAX} 年）。
           </p>
         </CardContent>
       </Card>
     );
   }
 
-  const solarTermDisplay = overview.solarTerm ?? "无节气";
+  const solarTermDisplay = overview.solarTerm ?? "无";
   const nextTermDisplay = nextTerm
     ? nextTerm.daysLeft === 0
       ? `今天是「${nextTerm.name}」`
       : `距离「${nextTerm.name}」还有 ${nextTerm.daysLeft} 天`
-    : "暂无下一节气数据";
+    : "当年已无更多节气";
+
+  const nextTermDateTimeDisplay = nextTerm
+    ? formatSolarTermDateTime(nextTerm as unknown as SolarTermEntry)
+    : null;
 
   return (
     <Card>
@@ -107,20 +113,27 @@ export function TodayOverview() {
               : "bg-muted/30"
           )}
         >
-          <div className="flex items-center gap-2">
+          <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
             <span className="text-sm font-medium text-muted-foreground">
               下一节气
             </span>
-            <span
-              className={cn(
-                "text-base font-semibold",
-                nextTerm && nextTerm.daysLeft === 0
-                  ? "text-primary"
-                  : "text-foreground"
+            <div className="flex flex-col items-start gap-1 sm:items-end">
+              <span
+                className={cn(
+                  "text-base font-semibold",
+                  nextTerm && nextTerm.daysLeft === 0
+                    ? "text-primary"
+                    : "text-foreground"
+                )}
+              >
+                {nextTermDisplay}
+              </span>
+              {nextTermDateTimeDisplay && (
+                <span className="text-sm text-muted-foreground">
+                  {nextTermDateTimeDisplay}
+                </span>
               )}
-            >
-              {nextTermDisplay}
-            </span>
+            </div>
           </div>
         </div>
       </CardContent>

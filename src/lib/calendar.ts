@@ -156,6 +156,7 @@ export function getTodayOverview(): TodayOverview | null {
 export interface NextSolarTerm {
   name: string;
   date: string;
+  time: string;
   daysLeft: number;
 }
 
@@ -169,18 +170,13 @@ function diffInDays(date1: Date, date2: Date): number {
 }
 
 /**
- * 获取当年下一个节气信息（含当天节气），如果当年已无节气则取下一年第一个节气
+ * 获取当年下一个节气信息（含当天节气），当年已无剩余节气则返回 null
  */
 export function getNextSolarTerm(fromDate: Date = new Date()): NextSolarTerm | null {
   const fromKey = formatDateKey(fromDate);
-  let year = fromDate.getFullYear();
-  let terms = getSolarTermsForYear(year);
-  let nextTerm = terms.find((t) => t.date >= fromKey);
-
-  if (!nextTerm && year < CALENDAR_YEAR_MAX) {
-    terms = getSolarTermsForYear(year + 1);
-    nextTerm = terms[0] ?? null;
-  }
+  const year = fromDate.getFullYear();
+  const terms = getSolarTermsForYear(year);
+  const nextTerm = terms.find((t) => t.date >= fromKey);
 
   if (!nextTerm) return null;
 
@@ -191,6 +187,7 @@ export function getNextSolarTerm(fromDate: Date = new Date()): NextSolarTerm | n
   return {
     name: nextTerm.name,
     date: nextTerm.date,
+    time: nextTerm.time,
     daysLeft,
   };
 }
