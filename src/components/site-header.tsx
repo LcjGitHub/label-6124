@@ -40,7 +40,14 @@ export function SiteHeader() {
                 )}
               >
                 <Icon className="h-4 w-4" />
-                <span className="hidden xs:inline sm:inline">{label}</span>
+                <span
+                  className={cn(
+                    "text-xs sm:text-sm",
+                    !active && "hidden sm:inline"
+                  )}
+                >
+                  {label}
+                </span>
               </Link>
             );
           })}
