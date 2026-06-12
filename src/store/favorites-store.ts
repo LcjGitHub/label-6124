@@ -17,6 +17,8 @@ export interface FavoriteItem {
 
 interface FavoritesStore {
   favorites: FavoriteItem[];
+  hydrated: boolean;
+  setHydrated: () => void;
   addFavorite: (date: Date, entry: DayEntry) => void;
   removeFavorite: (dateKey: string) => void;
   isFavorite: (dateKey: string) => boolean;
@@ -27,6 +29,9 @@ export const useFavoritesStore = create<FavoritesStore>()(
   persist(
     (set, get) => ({
       favorites: [],
+      hydrated: false,
+
+      setHydrated: () => set({ hydrated: true }),
 
       addFavorite: (date, entry) => {
         const dateKey = formatDateKey(date);
@@ -70,6 +75,11 @@ export const useFavoritesStore = create<FavoritesStore>()(
     {
       name: "lunar-calendar-favorites",
       storage: createJSONStorage(() => localStorage),
+      onRehydrateStorage: () => (state) => {
+        if (state) {
+          state.setHydrated();
+        }
+      },
     }
   )
 );

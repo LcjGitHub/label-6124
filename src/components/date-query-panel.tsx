@@ -57,9 +57,9 @@ export function DatePickerPanel() {
 export function DayInfoPanel() {
   const selectedDate = useDateStore((s) => s.selectedDate);
   const entry = getDayEntry(selectedDate);
-  const { isFavorite, toggleFavorite } = useFavoritesStore();
+  const { isFavorite, toggleFavorite, hydrated } = useFavoritesStore();
   const dateKey = formatDateKey(selectedDate);
-  const favorited = entry ? isFavorite(dateKey) : false;
+  const favorited = entry && hydrated ? isFavorite(dateKey) : false;
 
   if (!entry) {
     return (
@@ -80,7 +80,7 @@ export function DayInfoPanel() {
   const solarTermDisplay = entry.solarTerm ?? "无";
 
   const handleToggleFavorite = () => {
-    if (entry) {
+    if (entry && hydrated) {
       toggleFavorite(selectedDate, entry);
     }
   };
@@ -97,9 +97,15 @@ export function DayInfoPanel() {
             variant={favorited ? "default" : "outline"}
             size="sm"
             onClick={handleToggleFavorite}
+            disabled={!hydrated}
             className="shrink-0 gap-1.5"
           >
-            {favorited ? (
+            {!hydrated ? (
+              <>
+                <div className="h-4 w-4 animate-pulse rounded-full bg-current opacity-50" />
+                <span>加载中</span>
+              </>
+            ) : favorited ? (
               <>
                 <Star className="h-4 w-4 fill-current" />
                 <span>已收藏</span>

@@ -42,6 +42,12 @@ export function FavoriteItemCard({ item, onRemove }: FavoriteItemCardProps) {
                   {item.ganZhi.year}年 · {item.ganZhi.month}月 · {item.ganZhi.day}日
                 </span>
               </div>
+              <div>
+                <span className="font-medium">节气：</span>
+                <span className={item.solarTerm ? "text-foreground font-medium text-primary" : "text-foreground"}>
+                  {item.solarTerm ?? "无"}
+                </span>
+              </div>
               {item.festivals.length > 0 && (
                 <div className="flex flex-wrap items-center gap-2 pt-1">
                   <span className="font-medium">节日：</span>
