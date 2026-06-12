@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, KeyboardEvent, useEffect, useRef } from "react";
+import { useState, KeyboardEvent, useEffect, useRef, useMemo } from "react";
 import { Calendar } from "@/components/ui/calendar";
 import {
   Card,
@@ -20,6 +20,7 @@ import {
   formatDateKey,
   formatSolarDate,
   getDayEntry,
+  getSolarTermsForMonth,
 } from "@/lib/calendar";
 import { zhCN } from "date-fns/locale";
 import { Star, StarOff, ArrowRight } from "lucide-react";
@@ -166,6 +167,16 @@ export function DatePickerPanel() {
     setMonth(new Date(selectedDate.getFullYear(), selectedDate.getMonth(), 1));
   }, [selectedDate]);
 
+  const solarTermDates = useMemo(() => {
+    const year = month.getFullYear();
+    const monthIndex = month.getMonth() + 1;
+    const terms = getSolarTermsForMonth(year, monthIndex);
+    return terms.map((term) => {
+      const [y, m, d] = term.date.split("-").map(Number);
+      return new Date(y, m - 1, d);
+    });
+  }, [month]);
+
   return (
     <Card>
       <CardHeader>
@@ -186,6 +197,10 @@ export function DatePickerPanel() {
             locale={zhCN}
             fromDate={new Date(CALENDAR_YEAR_MIN, 0, 1)}
             toDate={new Date(CALENDAR_YEAR_MAX, 11, 31)}
+            modifiers={{ solarTerm: solarTermDates }}
+            modifiersClassNames={{
+              solarTerm: "solar-term-day",
+            }}
           />
         </div>
       </CardContent>

@@ -91,6 +91,23 @@ export function getSolarTermsForYear(year: number): SolarTermEntry[] {
 }
 
 /**
+ * 获取指定年月的节气日期列表
+ * @param year 年份
+ * @param month 月份（1-12）
+ */
+export function getSolarTermsForMonth(
+  year: number,
+  month: number,
+): SolarTermEntry[] {
+  const allTerms = getSolarTermsForYear(year);
+  const monthStr = String(month).padStart(2, "0");
+  return allTerms.filter((term) => {
+    const termMonth = term.date.split("-")[1];
+    return termMonth === monthStr;
+  });
+}
+
+/**
  * 格式化公历日期为中文展示
  */
 export function formatSolarDate(date: Date): string {
