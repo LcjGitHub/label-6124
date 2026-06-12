@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, KeyboardEvent } from "react";
+import { useState, KeyboardEvent, useEffect, useRef } from "react";
 import { Calendar } from "@/components/ui/calendar";
 import {
   Card,
@@ -26,13 +26,31 @@ import { Star, StarOff, ArrowRight } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 function DateInputForm() {
-  const { setSelectedDateFromString } = useDateStore();
+  const { selectedDate, setSelectedDateFromString } = useDateStore();
   const [yearInput, setYearInput] = useState("");
   const [monthInput, setMonthInput] = useState("");
   const [dayInput, setDayInput] = useState("");
   const [validation, setValidation] = useState<DateValidationResult | null>(
     null,
   );
+  const isEditingRef = useRef(false);
+
+  useEffect(() => {
+    if (!isEditingRef.current) {
+      const y = String(selectedDate.getFullYear());
+      const m = String(selectedDate.getMonth() + 1).padStart(2, "0");
+      const d = String(selectedDate.getDate()).padStart(2, "0");
+      setYearInput(y);
+      setMonthInput(m);
+      setDayInput(d);
+    }
+  }, [selectedDate]);
+
+  const clearValidation = () => {
+    if (validation !== null) {
+      setValidation(null);
+    }
+  };
 
   const handleJump = () => {
     const y = yearInput.trim();
@@ -47,18 +65,31 @@ function DateInputForm() {
     const input = `${y}-${m}-${d}`;
     const result = setSelectedDateFromString(input);
     setValidation(result);
-
-    if (result.valid) {
-      setYearInput("");
-      setMonthInput("");
-      setDayInput("");
-    }
+    isEditingRef.current = false;
   };
 
   const handleKeyDown = (e: KeyboardEvent<HTMLInputElement>) => {
     if (e.key === "Enter") {
       handleJump();
     }
+  };
+
+  const handleYearChange = (val: string) => {
+    isEditingRef.current = true;
+    clearValidation();
+    setYearInput(val.replace(/\D/g, ""));
+  };
+
+  const handleMonthChange = (val: string) => {
+    isEditingRef.current = true;
+    clearValidation();
+    setMonthInput(val.replace(/\D/g, ""));
+  };
+
+  const handleDayChange = (val: string) => {
+    isEditingRef.current = true;
+    clearValidation();
+    setDayInput(val.replace(/\D/g, ""));
   };
 
   const inputBaseClass =
@@ -75,10 +106,10 @@ function DateInputForm() {
           <input
             type="text"
             inputMode="numeric"
-            placeholder="2024"
+            placeholder="请输入年份"
             maxLength={4}
             value={yearInput}
-            onChange={(e) => setYearInput(e.target.value.replace(/\D/g, ""))}
+            onChange={(e) => handleYearChange(e.target.value)}
             onKeyDown={handleKeyDown}
             className={cn(inputBaseClass, "w-full")}
           />
@@ -88,10 +119,10 @@ function DateInputForm() {
           <input
             type="text"
             inputMode="numeric"
-            placeholder="06"
+            placeholder="月"
             maxLength={2}
             value={monthInput}
-            onChange={(e) => setMonthInput(e.target.value.replace(/\D/g, ""))}
+            onChange={(e) => handleMonthChange(e.target.value)}
             onKeyDown={handleKeyDown}
             className={cn(inputBaseClass, "w-full")}
           />
@@ -101,10 +132,10 @@ function DateInputForm() {
           <input
             type="text"
             inputMode="numeric"
-            placeholder="15"
+            placeholder="日"
             maxLength={2}
             value={dayInput}
-            onChange={(e) => setDayInput(e.target.value.replace(/\D/g, ""))}
+            onChange={(e) => handleDayChange(e.target.value)}
             onKeyDown={handleKeyDown}
             className={cn(inputBaseClass, "w-full")}
           />
@@ -129,6 +160,11 @@ function DateInputForm() {
  */
 export function DatePickerPanel() {
   const { selectedDate, setSelectedDate } = useDateStore();
+  const [month, setMonth] = useState<Date>(selectedDate);
+
+  useEffect(() => {
+    setMonth(new Date(selectedDate.getFullYear(), selectedDate.getMonth(), 1));
+  }, [selectedDate]);
 
   return (
     <Card>
@@ -145,10 +181,11 @@ export function DatePickerPanel() {
             mode="single"
             selected={selectedDate}
             onSelect={(date) => date && setSelectedDate(date)}
+            month={month}
+            onMonthChange={setMonth}
             locale={zhCN}
             fromDate={new Date(CALENDAR_YEAR_MIN, 0, 1)}
             toDate={new Date(CALENDAR_YEAR_MAX, 11, 31)}
-            defaultMonth={selectedDate}
           />
         </div>
       </CardContent>

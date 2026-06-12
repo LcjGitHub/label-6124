@@ -288,7 +288,7 @@ export function parseDateInput(input: string): DateValidationResult {
   if (year === null || month === null || day === null) {
     return {
       valid: false,
-      error: "格式错误，请使用 YYYY-MM-DD、YYYY/MM/DD 或 YYYY年MM月DD日",
+      error: "格式错误，请输入完整的年、月、日，例如二〇二四年六月十五日",
     };
   }
 
