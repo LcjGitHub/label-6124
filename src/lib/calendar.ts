@@ -345,3 +345,25 @@ export function validateGregorianDate(
 
   return { valid: true, date };
 }
+
+/**
+ * 生成日期信息的可读中文摘要
+ */
+export function formatDateSummary(date: Date, entry: DayEntry): string {
+  const solarDate = formatSolarDate(date);
+  const parts: string[] = [];
+
+  parts.push(`公历：${solarDate}`);
+  parts.push(`农历：${entry.lunar}`);
+  parts.push(`干支：${entry.ganZhi.year}年 ${entry.ganZhi.month}月 ${entry.ganZhi.day}日`);
+
+  if (entry.solarTerm) {
+    parts.push(`节气：${entry.solarTerm}`);
+  }
+
+  if (entry.festivals.length > 0) {
+    parts.push(`节日：${entry.festivals.join("、")}`);
+  }
+
+  return parts.join("；") + "。";
+}

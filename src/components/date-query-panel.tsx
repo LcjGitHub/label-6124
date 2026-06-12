@@ -18,12 +18,13 @@ import {
   CALENDAR_YEAR_MIN,
   DateValidationResult,
   formatDateKey,
+  formatDateSummary,
   formatSolarDate,
   getDayEntry,
   getSolarTermsForMonth,
 } from "@/lib/calendar";
 import { zhCN } from "date-fns/locale";
-import { Star, StarOff, ArrowRight } from "lucide-react";
+import { Star, StarOff, ArrowRight, Copy, Check, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 function DateInputForm() {
@@ -211,6 +212,8 @@ export function DatePickerPanel() {
   );
 }
 
+type CopyStatus = "idle" | "success" | "error";
+
 /**
  * 农历、干支、节气、节日展示卡片
  */
@@ -221,6 +224,43 @@ export function DayInfoPanel() {
   const { isFavorite, toggleFavorite, hydrated: favoritesHydrated } = useFavoritesStore();
   const dateKey = formatDateKey(selectedDate);
   const favorited = entry && dateHydrated && favoritesHydrated ? isFavorite(dateKey) : false;
+  const [copyStatus, setCopyStatus] = useState<CopyStatus>("idle");
+  const copyTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+  const solarTermDisplay = entry?.solarTerm ?? "无";
+
+  const handleToggleFavorite = () => {
+    if (entry && favoritesHydrated) {
+      toggleFavorite(selectedDate, entry);
+    }
+  };
+
+  const handleCopy = async () => {
+    if (!entry) return;
+
+    try {
+      const summary = formatDateSummary(selectedDate, entry);
+      await navigator.clipboard.writeText(summary);
+      setCopyStatus("success");
+    } catch (e) {
+      setCopyStatus("error");
+    }
+
+    if (copyTimeoutRef.current) {
+      clearTimeout(copyTimeoutRef.current);
+    }
+    copyTimeoutRef.current = setTimeout(() => {
+      setCopyStatus("idle");
+    }, 2000);
+  };
+
+  useEffect(() => {
+    return () => {
+      if (copyTimeoutRef.current) {
+        clearTimeout(copyTimeoutRef.current);
+      }
+    };
+  }, []);
 
   if (!dateHydrated) {
     return (
@@ -256,14 +296,6 @@ export function DayInfoPanel() {
       </Card>
     );
   }
-
-  const solarTermDisplay = entry.solarTerm ?? "无";
-
-  const handleToggleFavorite = () => {
-    if (entry && favoritesHydrated) {
-      toggleFavorite(selectedDate, entry);
-    }
-  };
 
   return (
     <Card>
@@ -318,6 +350,44 @@ export function DayInfoPanel() {
             </div>
           </div>
         )}
+        <div className="border-t pt-4">
+          <div className="flex items-center justify-between gap-3">
+            <div className="flex items-center gap-2">
+              {copyStatus === "success" && (
+                <span className="flex items-center gap-1 text-sm font-medium text-green-600">
+                  <Check className="h-4 w-4" />
+                  复制成功
+                </span>
+              )}
+              {copyStatus === "error" && (
+                <span className="flex items-center gap-1 text-sm font-medium text-destructive">
+                  <X className="h-4 w-4" />
+                  复制失败
+                </span>
+              )}
+              {copyStatus === "idle" && (
+                <span className="text-sm text-muted-foreground">
+                  一键复制日期摘要
+                </span>
+              )}
+            </div>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleCopy}
+              className="shrink-0 gap-1.5"
+            >
+              {copyStatus === "success" ? (
+                <Check className="h-4 w-4" />
+              ) : copyStatus === "error" ? (
+                <X className="h-4 w-4" />
+              ) : (
+                <Copy className="h-4 w-4" />
+              )}
+              {copyStatus === "idle" ? "复制" : copyStatus === "success" ? "已复制" : "重试"}
+            </Button>
+          </div>
+        </div>
       </CardContent>
     </Card>
   );
